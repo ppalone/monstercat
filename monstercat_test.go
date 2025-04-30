@@ -2,7 +2,6 @@ package monstercat_test
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/ppalone/monstercat"
@@ -24,10 +23,6 @@ func Test_SearchCatalog(t *testing.T) {
 
 		for _, track := range res.Tracks {
 			assert.NotEmpty(t, track.Artists)
-			tmp := strings.Split(track.StreamId, "|")
-			rId, tId := tmp[0], tmp[1]
-			assert.Equal(t, track.Release.ID, rId)
-			assert.Equal(t, track.ID, tId)
 		}
 	})
 

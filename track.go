@@ -1,7 +1,6 @@
 package monstercat
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -21,7 +20,6 @@ type Track struct {
 	Release        Release
 	ArtistsTitle   string
 	Artists        []Artist
-	StreamId       string // ReleaseCatalogID|TrackID
 }
 
 // Track API Response.
@@ -73,6 +71,5 @@ func (r *trackAPIResponse) toTrack() Track {
 		Release:        r.Release.toRelease(),
 		ArtistsTitle:   r.ArtistsTitle,
 		Artists:        artists,
-		StreamId:       fmt.Sprintf("%s|%s", r.Release.ID, r.ID),
 	}
 }
