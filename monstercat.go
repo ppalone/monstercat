@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -33,6 +34,44 @@ func (c *Client) SearchCatalog(ctx context.Context, q string, opts ...Option) (S
 		opt(options)
 	}
 	return c.searchCatalog(ctx, q, options)
+}
+
+// GetTrackStream
+func (c *Client) GetTrackStream(ctx context.Context, track Track) (io.Reader, error) {
+	if len(track.ID) == 0 {
+		return nil, fmt.Errorf("track id is empty for track")
+	}
+
+	if len(track.Release.ID) == 0 {
+		return nil, fmt.Errorf("release id is empty for track")
+	}
+
+	req, err := makeRequest(ctx, fmt.Sprintf("release/%s/track-stream/%s", track.Release.ID, track.ID), make(map[string]string))
+	if err != nil {
+		return nil, err
+	}
+
+	r, w := io.Pipe()
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		w.CloseWithError(err)
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		errInvalidTrack := fmt.Errorf("invalid track")
+		w.CloseWithError(errInvalidTrack)
+		return nil, errInvalidTrack
+	}
+
+	go func() {
+		defer resp.Body.Close()
+		_, err = io.Copy(w, resp.Body)
+		w.CloseWithError(err)
+	}()
+
+	return r, nil
 }
 
 func (c *Client) searchCatalog(ctx context.Context, q string, opts *options) (SearchCatalogResults, error) {

@@ -2,6 +2,7 @@ package monstercat_test
 
 import (
 	"context"
+	"io"
 	"testing"
 
 	"github.com/ppalone/monstercat"
@@ -76,5 +77,56 @@ func Test_SearchCatalog(t *testing.T) {
 		assert.NotEmpty(t, resOffset.Tracks)
 
 		assert.ElementsMatch(t, resNext.Tracks, resOffset.Tracks)
+	})
+}
+
+func Test_GetTrackStream(t *testing.T) {
+	t.Run("with track from catalog", func(t *testing.T) {
+		c := monstercat.NewClient(nil)
+		q := "Nitro Fun"
+		res, err := c.SearchCatalog(context.Background(), q)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res.Tracks)
+
+		track := res.Tracks[0]
+		stream, err := c.GetTrackStream(context.Background(), track)
+		assert.NoError(t, err)
+
+		buf, err := io.ReadAll(stream)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, buf)
+	})
+
+	t.Run("with custom track", func(t *testing.T) {
+		// Pegboard Nerds - Emoji
+		track := monstercat.Track{
+			ID: "20330b9b-207f-47e9-9517-420fb0e32dbc",
+			Release: monstercat.Release{
+				ID: "81ae1308-60fe-4884-b3f4-23b8cf9d818e",
+			},
+		}
+
+		c := monstercat.NewClient(nil)
+		stream, err := c.GetTrackStream(context.Background(), track)
+		assert.NoError(t, err)
+
+		buf, err := io.ReadAll(stream)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, buf)
+	})
+
+	t.Run("with invalid id", func(t *testing.T) {
+		// Pegboard Nerds - Emoji
+		track := monstercat.Track{
+			ID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+			Release: monstercat.Release{
+				ID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxx",
+			},
+		}
+
+		c := monstercat.NewClient(nil)
+		stream, err := c.GetTrackStream(context.Background(), track)
+		assert.ErrorContains(t, err, "invalid track")
+		assert.Nil(t, stream)
 	})
 }
