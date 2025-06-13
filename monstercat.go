@@ -74,6 +74,46 @@ func (c *Client) GetTrackStream(ctx context.Context, track Track) (io.Reader, er
 	return r, nil
 }
 
+// GetTrackStreamURL
+func (c *Client) GetTrackStreamURL(ctx context.Context, track Track) (string, error) {
+	if len(track.ID) == 0 {
+		return "", fmt.Errorf("track id is empty for track")
+	}
+
+	if len(track.Release.ID) == 0 {
+		return "", fmt.Errorf("release id is empty for track")
+	}
+
+	params := make(map[string]string)
+	params["noRedirect"] = "true"
+
+	req, err := makeRequest(ctx, fmt.Sprintf("release/%s/track-stream/%s", track.Release.ID, track.ID), params)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("invalid track")
+	}
+
+	type trackStreamURL struct {
+		SignedURL string `json:"SignedURL"`
+	}
+	res := new(trackStreamURL)
+	err = json.NewDecoder(resp.Body).Decode(res)
+	if err != nil {
+		return "", err
+	}
+
+	return res.SignedURL, nil
+}
+
 func (c *Client) searchCatalog(ctx context.Context, q string, opts *options) (SearchCatalogResults, error) {
 	opts.search = strings.TrimSpace(q)
 

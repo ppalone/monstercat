@@ -116,7 +116,6 @@ func Test_GetTrackStream(t *testing.T) {
 	})
 
 	t.Run("with invalid id", func(t *testing.T) {
-		// Pegboard Nerds - Emoji
 		track := monstercat.Track{
 			ID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 			Release: monstercat.Release{
@@ -128,5 +127,34 @@ func Test_GetTrackStream(t *testing.T) {
 		stream, err := c.GetTrackStream(context.Background(), track)
 		assert.ErrorContains(t, err, "invalid track")
 		assert.Nil(t, stream)
+	})
+}
+
+func Test_GetTrackStreamURL(t *testing.T) {
+	t.Run("with track from catalog", func(t *testing.T) {
+		q := "Pegboard Nerds"
+		c := monstercat.NewClient(nil)
+		res, err := c.SearchCatalog(context.Background(), q, monstercat.WithReleaseType(monstercat.ReleaseSingle))
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res.Tracks)
+
+		track := res.Tracks[0]
+		u, err := c.GetTrackStreamURL(context.Background(), track)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, u)
+	})
+
+	t.Run("with invalid id", func(t *testing.T) {
+		track := monstercat.Track{
+			ID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+			Release: monstercat.Release{
+				ID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxx",
+			},
+		}
+
+		c := monstercat.NewClient(nil)
+		u, err := c.GetTrackStreamURL(context.Background(), track)
+		assert.ErrorContains(t, err, "invalid track")
+		assert.Empty(t, u)
 	})
 }
