@@ -12,6 +12,8 @@ import (
 
 const (
 	baseURL = "https://player.monstercat.app/api"
+	webURL  = "https://www.monstercat.com"
+	cdxURL  = "https://cdx.monstercat.com"
 )
 
 // Monstercat Client.
@@ -112,6 +114,50 @@ func (c *Client) GetTrackStreamURL(ctx context.Context, track Track) (string, er
 	}
 
 	return res.SignedURL, nil
+}
+
+// GetResizedImage
+func (c *Client) GetResizedImageURL(ctx context.Context, coverURL string, options ...ResizeOption) (string, error) {
+	opts := newResizeOptions()
+	for _, option := range options {
+		option(opts)
+	}
+
+	if err := opts.validate(); err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, cdxURL, nil)
+	if err != nil {
+		return "", err
+	}
+
+	params := req.URL.Query()
+	params.Set("url", coverURL)
+	params.Set("width", strconv.Itoa(opts.width))
+	params.Set("encoding", string(opts.encoding))
+	req.URL.RawQuery = params.Encode()
+
+	client := &http.Client{}
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusPermanentRedirect {
+		return "", fmt.Errorf("failed to get resized image url")
+	}
+
+	location, err := resp.Location()
+	if err != nil {
+		return "", fmt.Errorf("error getting Location header: %w", err)
+	}
+
+	return location.String(), nil
 }
 
 func (c *Client) searchCatalog(ctx context.Context, q string, opts *options) (SearchCatalogResults, error) {

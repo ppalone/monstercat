@@ -1,6 +1,9 @@
 package monstercat
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type ReleaseType string
 
@@ -21,6 +24,7 @@ type Release struct {
 	ID        string
 	Title     string
 	Type      string
+	CoverURL  string
 }
 
 // Release API Response.
@@ -43,5 +47,6 @@ func (r *releaseAPIResponse) toRelease() Release {
 		ID:        r.ID,
 		Title:     r.Title,
 		Type:      r.Type,
+		CoverURL:  fmt.Sprintf("%s/release/%s/cover", webURL, r.CatalogID),
 	}
 }

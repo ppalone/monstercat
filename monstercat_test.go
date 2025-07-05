@@ -158,3 +158,27 @@ func Test_GetTrackStreamURL(t *testing.T) {
 		assert.Empty(t, u)
 	})
 }
+
+func Test_ReleaseCoverURL(t *testing.T) {
+	c := monstercat.NewClient(nil)
+	q := "Nitro Fun"
+	res, err := c.SearchCatalog(context.Background(), q)
+	assert.NoError(t, err)
+
+	for _, track := range res.Tracks {
+		assert.NotEmpty(t, track.Release.CoverURL)
+	}
+}
+
+func Test_GetResizedImageURL(t *testing.T) {
+	c := monstercat.NewClient(nil)
+	q := "Nitro Fun"
+	res, err := c.SearchCatalog(context.Background(), q, monstercat.WithLimit(5), monstercat.WithReleaseType(monstercat.ReleaseSingle))
+	assert.NoError(t, err)
+
+	for _, track := range res.Tracks {
+		resizedURL, err := c.GetResizedImageURL(context.Background(), track.Release.CoverURL, monstercat.WithWidth(256))
+		assert.NoError(t, err)
+		assert.NotEmpty(t, resizedURL)
+	}
+}
