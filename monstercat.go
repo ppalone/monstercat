@@ -160,6 +160,15 @@ func (c *Client) GetResizedImageURL(ctx context.Context, coverURL string, option
 	return location.String(), nil
 }
 
+// GetRelease
+func (c *Client) GetRelease(ctx context.Context, id string, options ...ReleaseOption) (ReleaseInfo, error) {
+	opts := newGetReleaseOpts()
+	for _, option := range options {
+		option(opts)
+	}
+	return c.getRelease(ctx, id, opts)
+}
+
 func (c *Client) searchCatalog(ctx context.Context, q string, opts *options) (SearchCatalogResults, error) {
 	opts.search = strings.TrimSpace(q)
 
@@ -186,6 +195,36 @@ func (c *Client) searchCatalog(ctx context.Context, q string, opts *options) (Se
 	}
 
 	return apiResponse.toResults(c, opts), nil
+}
+
+func (c *Client) getRelease(ctx context.Context, id string, opts *getReleaseOpts) (ReleaseInfo, error) {
+	id = strings.TrimSpace(id)
+	if len(id) == 0 {
+		return ReleaseInfo{}, fmt.Errorf("id cannot be empty")
+	}
+
+	req, err := makeRequest(ctx, fmt.Sprintf("catalog/release/%s", id), opts.build())
+	if err != nil {
+		return ReleaseInfo{}, err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return ReleaseInfo{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return ReleaseInfo{}, fmt.Errorf("invalid id")
+	}
+
+	apiResponse := new(getReleaseAPIResponse)
+	err = json.NewDecoder(resp.Body).Decode(apiResponse)
+	if err != nil {
+		return ReleaseInfo{}, err
+	}
+
+	return apiResponse.toReleaseInfo(ctx, c)
 }
 
 func makeRequest(ctx context.Context, url string, params map[string]string) (*http.Request, error) {

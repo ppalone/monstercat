@@ -190,3 +190,43 @@ func Test_GetResizedImageURL(t *testing.T) {
 		assert.NotEmpty(t, resizedURL)
 	}
 }
+
+func Test_GetRelease(t *testing.T) {
+	t.Run("with catalog id", func(t *testing.T) {
+		c := monstercat.NewClient(nil)
+		id := "742779555328"
+		res, err := c.GetRelease(context.Background(), id)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res.Tracks)
+	})
+
+	t.Run("with uuid", func(t *testing.T) {
+		c := monstercat.NewClient(nil)
+		uuid := "475fcbbb-be8e-41bb-9f5e-1d3ce05f77be"
+		res, err := c.GetRelease(context.Background(), uuid, monstercat.WithIdType(monstercat.UUID))
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res.Tracks)
+	})
+
+	t.Run("with invalid id", func(t *testing.T) {
+		c := monstercat.NewClient(nil)
+		id := "xxxxxxxx"
+		_, err := c.GetRelease(context.Background(), id)
+		assert.ErrorContains(t, err, "invalid id")
+	})
+
+	t.Run("with catalog id and uuid", func(t *testing.T) {
+		c := monstercat.NewClient(nil)
+		id := "742779555328"
+		res1, err := c.GetRelease(context.Background(), id)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res1.Tracks)
+
+		res2, err := c.GetRelease(context.Background(), res1.ID, monstercat.WithIdType(monstercat.UUID))
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res2.Tracks)
+
+		assert.Equal(t, res1.Title, res2.Title)
+		assert.ElementsMatch(t, res1.Tracks, res2.Tracks)
+	})
+}
