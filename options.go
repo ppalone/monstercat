@@ -8,6 +8,7 @@ type options struct {
 	search      string
 	sort        string
 	releaseType ReleaseType
+	releaseId   string
 }
 
 type Option func(o *options)
@@ -19,6 +20,7 @@ func newOptions() *options {
 		search:      "",
 		sort:        "",
 		releaseType: "",
+		releaseId:   "",
 	}
 }
 
@@ -51,5 +53,11 @@ func WithSort(field string) Option {
 func WithReleaseType(releaseType ReleaseType) Option {
 	return func(o *options) {
 		o.releaseType = releaseType
+	}
+}
+
+func WithReleaseId(releaseId string) Option {
+	return func(o *options) {
+		o.releaseId = releaseId
 	}
 }

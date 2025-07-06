@@ -78,6 +78,14 @@ func Test_SearchCatalog(t *testing.T) {
 
 		assert.ElementsMatch(t, resNext.Tracks, resOffset.Tracks)
 	})
+
+	t.Run("with releaseId filter", func(t *testing.T) {
+		c := monstercat.NewClient(nil)
+		id := "475fcbbb-be8e-41bb-9f5e-1d3ce05f77be" // Best of 2024
+		res, err := c.SearchCatalog(context.Background(), "", monstercat.WithReleaseId(id))
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res.Tracks)
+	})
 }
 
 func Test_GetTrackStream(t *testing.T) {

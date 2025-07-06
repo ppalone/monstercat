@@ -219,5 +219,9 @@ func buildParams(opts *options) (map[string]string, error) {
 		params["types"] = opts.releaseType.String()
 	}
 
+	if len(opts.releaseId) != 0 {
+		params["releaseId"] = opts.releaseId
+	}
+
 	return params, nil
 }
