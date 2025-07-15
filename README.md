@@ -2,6 +2,12 @@
 
 Unofficial Monstercat Go Client
 
+## Installation
+
+```bash
+$ go get github.com/ppalone/monstercat
+```
+
 ## Usage
 
 ```
