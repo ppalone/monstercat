@@ -39,7 +39,7 @@ func (c *Client) SearchCatalog(ctx context.Context, q string, opts ...Option) (S
 }
 
 // GetTrackStream
-func (c *Client) GetTrackStream(ctx context.Context, track Track) (io.Reader, error) {
+func (c *Client) GetTrackStream(ctx context.Context, track Track) (io.ReadCloser, error) {
 	if len(track.ID) == 0 {
 		return nil, fmt.Errorf("track id is empty for track")
 	}
@@ -48,7 +48,7 @@ func (c *Client) GetTrackStream(ctx context.Context, track Track) (io.Reader, er
 		return nil, fmt.Errorf("release id is empty for track")
 	}
 
-	req, err := makeRequest(ctx, fmt.Sprintf("release/%s/track-stream/%s", track.Release.ID, track.ID), make(map[string]string))
+	req, err := makeRequest(ctx, fmt.Sprintf("release/%s/track-stream/%s", track.Release.ID, track.ID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -69,8 +69,8 @@ func (c *Client) GetTrackStream(ctx context.Context, track Track) (io.Reader, er
 
 	go func() {
 		defer resp.Body.Close()
-		_, err = io.Copy(w, resp.Body)
-		w.CloseWithError(err)
+		_, copyErr := io.Copy(w, resp.Body)
+		w.CloseWithError(copyErr)
 	}()
 
 	return r, nil
