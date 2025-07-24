@@ -70,7 +70,12 @@ func (c *Client) GetTrackStream(ctx context.Context, track Track) (io.ReadCloser
 	go func() {
 		defer resp.Body.Close()
 		_, copyErr := io.Copy(w, resp.Body)
-		w.CloseWithError(copyErr)
+		if copyErr != nil {
+			w.CloseWithError(copyErr)
+			return
+		}
+
+		w.Close()
 	}()
 
 	return r, nil
